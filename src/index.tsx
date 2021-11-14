@@ -15,6 +15,7 @@ import store from "./redux/store";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { WebSocketLink } from "@apollo/client/link/ws";
+import * as serviceWorker from "./serviceWorkerRegistration";
 
 const theme = createTheme({
   palette: {
@@ -73,3 +74,5 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById("root")
 );
+
+serviceWorker.register();
