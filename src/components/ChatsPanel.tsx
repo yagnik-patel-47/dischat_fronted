@@ -13,14 +13,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import Chats from "./Chats";
-import { useFormik } from "formik";
-import * as yup from "yup";
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
-import {
-  FIND_USER_BY_USERNAME,
-  GET_ALL_CHATS,
-  GET_USER_CHATS,
-} from "../utils/queries";
+import { GET_ALL_CHATS, GET_USER_CHATS } from "../utils/queries";
 import { CREATE_CHAT, ADD_USER_TO_CHAT } from "../utils/mutations";
 import { useAppSelector } from "../redux/reduxHooks";
 import { auth } from "../firebase";
@@ -41,49 +35,21 @@ const modalStyles = {
 
 const MotionBox = motion(Box);
 const MotionDivider = motion(Divider);
+const MotionStack = motion(Stack);
 
 const ChatsPanel = () => {
   const [addingChat, setAddingChat] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [newServerName, setNewServerName] = useState("");
   const user = useAppSelector((store) => store.profile);
-  const validationSchema = yup.object({
-    username: yup.string().required("Username is required."),
-  });
-  const formik = useFormik({
-    initialValues: {
-      username: "",
-    },
-    validationSchema,
-    onSubmit: onSubmitFormik,
-  });
   const [createChat] = useMutation(CREATE_CHAT);
   const [addUserToChat] = useMutation(ADD_USER_TO_CHAT);
-  const [findUser, { data, loading }] = useLazyQuery(FIND_USER_BY_USERNAME, {
-    onCompleted: () => setModalOpen(true),
-  });
   const [getAllChats, { data: allChats, loading: allChatsLoading }] =
     useLazyQuery(GET_ALL_CHATS);
   const { data: userChats, loading: userChatsLoading } = useQuery(
     GET_USER_CHATS,
     { variables: { email: user.email } }
   );
-
-  function onSubmitFormik(values: { username: string }) {
-    if (values.username.includes(" ")) {
-      formik.setFieldError("username", "Username should not contain space.");
-      return;
-    }
-    if (formik.values.username === user.username) {
-      alert("LOL. its your username 😂.");
-      return;
-    }
-    findUser({
-      variables: {
-        username: values.username,
-      },
-    });
-  }
 
   const createServer = () => {
     if (newServerName === "") {
@@ -92,21 +58,13 @@ const ChatsPanel = () => {
     }
     createChat({
       variables: {
-        users: [
-          { email: user.email, username: user.username, _id: user.id },
-          {
-            email: data.findUserByUsername.user.email,
-            username: data.findUserByUsername.user.username,
-            _id: data.findUserByUsername.user._id,
-          },
-        ],
+        users: [{ email: user.email, username: user.username, _id: user.id }],
         name: newServerName,
       },
     });
     setModalOpen(false);
     setNewServerName("");
     setAddingChat(false);
-    formik.resetForm();
   };
 
   return (
@@ -118,24 +76,22 @@ const ChatsPanel = () => {
       <AnimateSharedLayout>
         <>
           <Stack spacing={2} sx={{ p: 4 }} height="100%">
-            <Box display="flex" justifyContent="space-between">
+            <MotionBox layout display="flex" justifyContent="space-between">
               <Typography variant="h6">Servers</Typography>
               <Button
                 startIcon={addingChat ? <CloseIcon /> : <AddIcon />}
                 onClick={() => {
                   getAllChats();
                   setAddingChat((prev) => !prev);
-                  if (!addingChat) {
-                    formik.resetForm();
-                  }
                 }}
               >
-                {addingChat ? "Cancel" : "Create New Server"}
+                {addingChat ? "Cancel" : "New Server"}
               </Button>
-            </Box>
+            </MotionBox>
             <AnimatePresence>
               {addingChat && (
-                <motion.form
+                <MotionStack
+                  spacing={1}
                   initial={{ y: 100, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{
@@ -145,106 +101,79 @@ const ChatsPanel = () => {
                   }}
                   transition={{ duration: 0.4 }}
                   layout
-                  onSubmit={formik.handleSubmit}
                 >
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={4}>
-                      <TextField
-                        autoComplete="given-name"
-                        name="username"
-                        required
-                        variant="filled"
-                        fullWidth
-                        id="username"
-                        label="Username to add"
-                        value={formik.values.username}
-                        onChange={formik.handleChange}
-                        error={
-                          formik.touched.username &&
-                          Boolean(formik.errors.username)
-                        }
-                        helperText={
-                          formik.touched.username && formik.errors.username
-                        }
-                      />
-                      <Button type="submit" variant="outlined">
-                        Add
-                      </Button>
-                    </Stack>
-                    <Divider>OR</Divider>
-                    <Stack spacing={2}>
-                      <Typography>
-                        Select from already available servers.
-                      </Typography>
-                      <Stack
-                        height={200}
-                        spacing={1}
-                        sx={{ overflowY: "auto" }}
-                      >
-                        {!allChatsLoading &&
-                          allChats?.getAllChats &&
-                          allChats.getAllChats.map(
-                            (
-                              chat: {
-                                name: string;
-                                _id: string;
-                                users: [{ username: string }];
-                              },
-                              index: number
-                            ) => (
-                              <Stack
-                                key={index}
-                                alignItems="center"
-                                direction="row"
-                                spacing={2}
-                              >
-                                <Button
-                                  onClick={() => {
-                                    if (
-                                      !userChatsLoading &&
-                                      userChats?.getUser?.user?.chats.includes(
-                                        chat._id
-                                      )
-                                    ) {
-                                      return alert("already in server.");
-                                    }
-                                    addUserToChat({
-                                      variables: {
-                                        chatId: chat._id,
-                                        user: {
-                                          username: user.username,
-                                          email: user.email,
-                                          _id: user.id,
-                                        },
+                  <Button onClick={() => setModalOpen(true)} variant="outlined">
+                    Create New Server
+                  </Button>
+                  <Divider>OR</Divider>
+                  <Stack spacing={2}>
+                    <Typography>
+                      Select from already available servers.
+                    </Typography>
+                    <Stack height={200} spacing={1} sx={{ overflowY: "auto" }}>
+                      {!allChatsLoading &&
+                        allChats?.getAllChats &&
+                        allChats.getAllChats.map(
+                          (
+                            chat: {
+                              name: string;
+                              _id: string;
+                              users: [{ username: string }];
+                            },
+                            index: number
+                          ) => (
+                            <Stack
+                              key={index}
+                              alignItems="center"
+                              direction="row"
+                              spacing={2}
+                            >
+                              <Button
+                                onClick={() => {
+                                  if (
+                                    !userChatsLoading &&
+                                    userChats?.getUser?.user?.chats.includes(
+                                      chat._id
+                                    )
+                                  ) {
+                                    return alert("already in server.");
+                                  }
+                                  addUserToChat({
+                                    variables: {
+                                      chatId: chat._id,
+                                      user: {
+                                        username: user.username,
+                                        email: user.email,
+                                        _id: user.id,
                                       },
-                                    });
-                                    setAddingChat(false);
-                                  }}
-                                >
-                                  {chat.name}
-                                </Button>
-                                <Typography>
-                                  members: {chat.users.length}
-                                </Typography>
-                              </Stack>
-                            )
-                          )}
-                        {allChatsLoading && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              height: "100%",
-                            }}
-                          >
-                            <CircularProgress />
-                          </Box>
+                                    },
+                                  });
+                                  setAddingChat(false);
+                                }}
+                              >
+                                {chat.name}
+                              </Button>
+                              <Typography>
+                                members: {chat.users.length}
+                              </Typography>
+                            </Stack>
+                          )
                         )}
-                      </Stack>
+                      {allChatsLoading && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            height: "100%",
+                          }}
+                        >
+                          <CircularProgress />
+                        </Box>
+                      )}
                     </Stack>
                   </Stack>
-                </motion.form>
+                </MotionStack>
               )}
             </AnimatePresence>
             <MotionDivider layout flexItem />
@@ -254,51 +183,29 @@ const ChatsPanel = () => {
             aria-labelledby="new chat"
             aria-describedby="modal-modal-description"
             open={modalOpen}
-            onClose={() => setModalOpen(false)}
+            onClose={() => {
+              setModalOpen(false);
+              setNewServerName("");
+            }}
           >
-            {!loading && data !== undefined ? (
-              <>
-                <Box sx={modalStyles}>
-                  <Stack spacing={2}>
-                    <Typography variant="h6" component="h2">
-                      {data.findUserByUsername && data.findUserByUsername.user
-                        ? "Found 😊"
-                        : "Error!"}
-                    </Typography>
-                    <Typography sx={{ mt: 2 }}>
-                      {data.findUserByUsername && data.findUserByUsername.user
-                        ? "User added successfully."
-                        : data.findUserByUsername.error.message}
-                    </Typography>
-                    {data.findUserByUsername && data.findUserByUsername.user && (
-                      <>
-                        <TextField
-                          autoComplete="server-name"
-                          name="servername"
-                          required
-                          fullWidth
-                          id="servername"
-                          label="New servername"
-                          value={newServerName}
-                          onChange={(e) => setNewServerName(e.target.value)}
-                        />
-                        <Button onClick={createServer}>Create Server</Button>
-                      </>
-                    )}
-                  </Stack>
-                </Box>
-              </>
-            ) : (
-              <Box
-                sx={{
-                  ...modalStyles,
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <CircularProgress />
-              </Box>
-            )}
+            <Box sx={modalStyles}>
+              <Stack spacing={2}>
+                <Typography variant="h6" component="h2">
+                  Create New Server
+                </Typography>
+                <TextField
+                  autoComplete="server-name"
+                  name="servername"
+                  required
+                  fullWidth
+                  id="servername"
+                  label="New servername"
+                  value={newServerName}
+                  onChange={(e) => setNewServerName(e.target.value)}
+                />
+                <Button onClick={createServer}>Create Server</Button>
+              </Stack>
+            </Box>
           </Modal>
         </>
         <MotionBox layout>

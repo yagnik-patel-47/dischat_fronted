@@ -164,9 +164,13 @@ const MessageScreen = () => {
                 {data.getChat.name}
               </Typography>
               <Stack direction="row" spacing={1}>
-                <IconButton onClick={() => setAddNewModal(true)}>
-                  <AddIcon />
-                </IconButton>
+                <Button
+                  color="inherit"
+                  onClick={() => setAddNewModal(true)}
+                  startIcon={<AddIcon />}
+                >
+                  User
+                </Button>
                 {smallScreenDevices && (
                   <IconButton
                     size="large"
@@ -243,7 +247,10 @@ const MessageScreen = () => {
         aria-labelledby="new chat"
         aria-describedby="modal-modal-description"
         open={addNewModal}
-        onClose={() => setAddNewModal(false)}
+        onClose={() => {
+          setNewUserUsername("");
+          setAddNewModal(false);
+        }}
       >
         {!newUserLoading ? (
           <Box sx={modalStyles}>
