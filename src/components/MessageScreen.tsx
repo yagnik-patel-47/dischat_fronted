@@ -42,9 +42,16 @@ const modalStyles = {
 
 const MessageScreen = () => {
   const { id }: { id: string } = useParams();
+  const messagesContainer = useRef<HTMLDivElement>(null);
   const { data, loading, refetch } = useQuery(GET_CHAT, {
     variables: { ChatId: id },
-    onCompleted: (data) => setMessages(data.getChat.messages),
+    onCompleted: (data) => {
+      setMessages(data.getChat.messages);
+      if (messagesContainer.current) {
+        messagesContainer.current.scrollTop =
+          messagesContainer.current.scrollHeight;
+      }
+    },
   });
   const { data: newMessage } = useSubscription(NEW_MESSAGE_SUB, {
     variables: { chatId: id },
@@ -66,7 +73,6 @@ const MessageScreen = () => {
     FIND_USER_BY_USERNAME
   );
   const dispatch = useAppDispatch();
-  const messagesContainer = useRef<HTMLDivElement>(null);
 
   const sendMessage = () => {
     if (messageText === "") {
@@ -113,7 +119,12 @@ const MessageScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (userFound?.findUserByUsername?.user) {
+    const userIsAlreadyIn = data?.getChat?.users?.find(
+      (user: { username: string }) =>
+        user.username === userFound?.findUserByUsername?.user?.username
+    );
+    if (userIsAlreadyIn) return alert("User is already in server.");
+    if (userFound?.findUserByUsername?.user && !userIsAlreadyIn) {
       addToChat({
         variables: {
           chatId: id,
@@ -127,7 +138,7 @@ const MessageScreen = () => {
     }
   }, [userFound?.findUserByUsername?.user]);
 
-  const checkUser = () => {
+  const checkUser = async () => {
     findUser({ variables: { username: newUserUsername } });
   };
 

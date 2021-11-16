@@ -107,7 +107,7 @@ const RootApp = () => {
             </Drawer>
           </Route>
           <Route path={["/signin", "/signup"]} component={RedirectPage} exact />
-          <Route path="/" exact>
+          <Route path={["/", "/chat"]} exact>
             <Box
               sx={{
                 display: "flex",

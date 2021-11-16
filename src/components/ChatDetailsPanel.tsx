@@ -39,7 +39,7 @@ const ChatDetailsPanel = () => {
   return (
     <Stack
       height="100%"
-      sx={{ py: 4, bgcolor: "background.paper", px: 4 }}
+      sx={{ py: 4, bgcolor: "background.paper", px: 4, overflowY: "auto" }}
       spacing={3}
     >
       {!loading && data.getChat ? (
@@ -63,7 +63,7 @@ const ChatDetailsPanel = () => {
           <Divider flexItem />
           <Stack spacing={2}>
             <Typography>Members</Typography>
-            <Stack height="100%" spacing={2} sx={{ overflowY: "auto" }}>
+            <Stack spacing={2}>
               {data.getChat.users.map(
                 (user: { username: string }, index: number) => (
                   <Stack

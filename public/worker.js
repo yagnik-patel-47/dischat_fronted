@@ -1,5 +1,5 @@
 var CACHE_NAME = "pwa-dischat";
-var urlsToCache = ["/", "/chat/:id"];
+var urlsToCache = ["/", "/chat/:id", "/chat"];
 
 // Install a service worker
 self.addEventListener("install", (event) => {
