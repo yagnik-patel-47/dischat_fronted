@@ -38,6 +38,7 @@ export const NEW_MESSAGE = gql`
       message
       timestamp
       sender
+      chatId
     }
   }
 `;

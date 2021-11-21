@@ -6,6 +6,7 @@ const NEW_MESSAGE_SUB = gql`
       message
       sender
       timestamp
+      chatId
     }
   }
 `;

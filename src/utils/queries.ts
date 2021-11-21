@@ -77,6 +77,7 @@ export const GET_CHAT = gql`
         message
         sender
         timestamp
+        chatId
       }
       users {
         username

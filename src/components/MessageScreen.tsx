@@ -217,16 +217,18 @@ const MessageScreen = () => {
               </Box>
             ) : (
               <Stack spacing={2} py={2} px={4}>
-                {messages.map(({ message, timestamp, sender }, index) => (
-                  <Message
-                    timestamp={timestamp}
-                    message={message}
-                    sender={sender}
-                    key={index}
-                    index={index}
-                    chatId={id}
-                  />
-                ))}
+                {messages
+                  .filter((msg) => msg.chatId === id)
+                  .map(({ message, timestamp, sender, chatId }, index) => (
+                    <Message
+                      timestamp={timestamp}
+                      message={message}
+                      sender={sender}
+                      key={index}
+                      index={index}
+                      chatId={chatId}
+                    />
+                  ))}
               </Stack>
             )}
           </Box>
