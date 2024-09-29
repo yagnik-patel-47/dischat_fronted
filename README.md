@@ -1,6 +1,6 @@
 # Dischat
 
-A chat like discord with all basic except channels and voice chat.
+A chat like Discord with all basic Discord features, except channels and voice chat (will be added soon).
 
 ## Features
 
